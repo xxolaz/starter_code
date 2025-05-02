@@ -294,7 +294,7 @@ def create_venue_submission():
           error = True
           db.session.rollback()
           print(e)
-          flash('An error occurred. Venue ' + form.name.data + ' could not be listed.', 'danger')
+          flash('An error occurred. Venue ' + form.name.data + ' could not be listed.', 'error')
       finally:
           db.session.close()
   else:
@@ -318,7 +318,6 @@ def delete_venue(venue_id):
           flash('Venue ' + venue_name + ' was successfully deleted!', 'success')
       else:
           error = True
-          flash(f'Venue with ID {venue_id} not found.', 'warning')
 
   except Exception as e:
       error = True

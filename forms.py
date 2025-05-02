@@ -79,7 +79,7 @@ state_choices = [
         ('WY', 'WY'),
     ]
 
-phone_regex = r'^\(?([0-9]{3})\)?[-.●\s]?([0-9]{3})[-.●\s]?([0-9]{4})$'
+phone_regex = r'^\(?([0-9]{3})\)?[-.●\s]?([0-9]{3})[-.●\s]?([0-9]{4})$' #Fancy Phone Number Regex
 phone_error_message = 'Invalid phone number format. Use xxx-xxx-xxxx or similar.'
 
 class ShowForm(Form):
@@ -186,7 +186,7 @@ class ArtistForm(Form):
         'seeking_venue',
         default=False
     )
-    seeking_description = StringField( # Or use TextAreaField
+    seeking_description = StringField(
         'seeking_description',
-        validators=[Optional(), Length(max=500)] # Optional length limit
+        validators=[Optional(), Length(max=500)]
     )
