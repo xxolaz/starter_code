@@ -16,6 +16,7 @@ from forms import *
 import sys
 import datetime
 from sqlalchemy import func
+from models import db, Venue, Artist, Show
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -30,67 +31,6 @@ migrate = Migrate()
 
 db.init_app(app)
 migrate.init_app(app, db)
-
-#----------------------------------------------------------------------------#
-# Models.
-#----------------------------------------------------------------------------#
-
-class Venue(db.Model):
-    __tablename__ = 'Venue'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False, unique=True)
-    city = db.Column(db.String(120), nullable=False)
-    state = db.Column(db.String(120), nullable=False)
-    address = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    genres = db.Column(db.String, nullable=False)
-    website_link = db.Column(db.String(120))
-    seeking_talent = db.Column(db.Boolean, default=False, nullable=False)
-    seeking_description = db.Column(db.String(500))
-
-    shows = db.relationship('Show', backref='venue', lazy=True, cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f'<Venue {self.id} {self.name}>'
-
-class Artist(db.Model):
-    __tablename__ = 'Artist'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False, unique=True)
-    city = db.Column(db.String(120), nullable=False)
-    state = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String, nullable=False)
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website_link = db.Column(db.String(120))
-    seeking_venue = db.Column(db.Boolean, default=False, nullable=False)
-    seeking_description = db.Column(db.String(500))
-
-    shows = db.relationship('Show', backref='artist', lazy=True, cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f'<Artist {self.id} {self.name}>'
-
-    shows = db.relationship('Show', backref='artist', lazy=True, cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f'<Artist {self.id} {self.name}>'
-
-class Show(db.Model):
-    __tablename__ = 'Show'
-
-    id = db.Column(db.Integer, primary_key=True)
-    start_time = db.Column(db.DateTime, nullable=False)
-    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
-
-    def __repr__(self):
-        return f'<Show {self.id} Artist: {self.artist_id} Venue: {self.venue_id} Time: {self.start_time}>'
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -209,7 +149,7 @@ def show_venue(venue_id):
   error = False
 
   try:
-    shows_query = Show.query.filter_by(venue_id=venue_id).order_by(Show.start_time).all()
+    shows_query = db.session.query(Show, Artist).join(Artist, Show.artist_id == Artist.id).filter(Show.venue_id == venue_id).order_by(Show.start_time).all()
 
     for show in shows_query:
         if show.artist:
@@ -386,7 +326,7 @@ def show_artist(artist_id):
   error = False
 
   try:
-      shows_query = Show.query.filter_by(artist_id=artist_id).order_by(Show.start_time).all()
+      shows_query = db.session.query(Show, Venue).join(Venue, Show.venue_id == Venue.id).filter(Show.artist_id == artist_id).order_by(Show.start_time).all()
 
       for show in shows_query:
           if show.venue: 
@@ -571,7 +511,7 @@ def shows():
   data = []
   error = False
   try:
-      shows_list = Show.query.order_by(Show.start_time.desc()).all()
+      shows_list = db.session.query(Show.start_time, Venue.id.label('venue_id'), Venue.name.label('venue_name'), Artist.id.label('artist_id'), Artist.name.label('artist_name'), Artist.image_link.label('artist_image_link')).select_from(Show).join(Venue, Show.venue_id == Venue.id).join(Artist, Show.artist_id == Artist.id).order_by(Show.start_time.desc()).all()
 
       for show in shows_list:
           if show.venue and show.artist:
